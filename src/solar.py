@@ -19,13 +19,13 @@ import pvlib
 from src.config import LATITUDE, LONGITUDE, TIMEZONE, DATE_FORMAT, ALTITUDE
 
 
-def get_time_series(date_str: str, freq: str = "10min") -> pd.DatetimeIndex:
+def get_time_series(date_str: str, freq: str = "30s") -> pd.DatetimeIndex:
     """
     Generate a time series for a given date at the specified frequency.
 
     Args:
         date_str: A string representing the date (format defined in config).
-        freq: Frequency string (default '10min') for the time intervals.
+        freq: Frequency string (default '30s') for the time intervals.
 
     Returns:
         A pandas DatetimeIndex covering the entire day in the configured timezone.
@@ -61,15 +61,21 @@ def get_sunlit_times(
         solar_positions: DataFrame with at least an 'elevation' column indexed by time.
 
     Returns:
-        A tuple containing the first and last timestamps where elevation > -0.833°
+        A tuple containing the first and last timestamps where elevation > -0.9°
         (accounting for refraction). If no sunlit period is found, returns (None, None).
     """
-    # Apply atmospheric refraction correction (-0.833° instead of 0°)
-    day_df = solar_positions[solar_positions["elevation"] > -0.833]
-    if day_df.empty:
-        return None, None
-    first_ray = day_df.index[0]
-    last_ray = day_df.index[-1]
+    # Adjust threshold: Use a slightly lower value for morning refraction sensitivity
+    morning_threshold = -0.9  # More conservative for first light
+    evening_threshold = -0.833  # Standard refraction correction for last light
+
+    # Find first sunlit time (using morning threshold)
+    first_sunlit_df = solar_positions[solar_positions["elevation"] > morning_threshold]
+    first_ray = first_sunlit_df.index[0] if not first_sunlit_df.empty else None
+
+    # Find last sunlit time (using evening threshold)
+    last_sunlit_df = solar_positions[solar_positions["elevation"] > evening_threshold]
+    last_ray = last_sunlit_df.index[-1] if not last_sunlit_df.empty else None
+
     return first_ray, last_ray
 
 
