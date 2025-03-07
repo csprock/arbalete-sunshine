@@ -1,3 +1,8 @@
 pvlib
 pandas
 numpy
+pyproj
+rtree
+pyglet
+shapely
+mapbox-earcut
