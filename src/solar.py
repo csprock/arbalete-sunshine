@@ -16,7 +16,7 @@ from typing import Tuple
 import pandas as pd
 import pvlib
 
-from src.config import LATITUDE, LONGITUDE, TIMEZONE, DATE_FORMAT
+from src.config import LATITUDE, LONGITUDE, TIMEZONE, DATE_FORMAT, ALTITUDE
 
 
 def get_time_series(date_str: str, freq: str = "10min") -> pd.DatetimeIndex:
@@ -45,27 +45,27 @@ def get_solar_positions(times: pd.DatetimeIndex) -> pd.DataFrame:
     Returns:
         A DataFrame with solar position data (including 'elevation' and 'azimuth').
     """
-    return pvlib.solarposition.get_solarposition(times, LATITUDE, LONGITUDE)
+    return pvlib.solarposition.get_solarposition(
+        times, LATITUDE, LONGITUDE, altitude=ALTITUDE, method="nrel_numpy"
+    )
 
 
 def get_sunlit_times(
     solar_positions: pd.DataFrame,
 ) -> Tuple[pd.Timestamp | None, pd.Timestamp | None]:
     """
-    Determine the first and last sunlit times for the day.
-
-    In this simplified model (without building shading), the terrace is considered
-    sunlit whenever the sun's elevation is greater than zero.
+    Determine the first and last sunlit times for the day, considering atmospheric
+    refraction.
 
     Args:
         solar_positions: DataFrame with at least an 'elevation' column indexed by time.
 
     Returns:
-        A tuple containing the first and last timestamps where elevation > 0. If no
-        sunlit period is found, returns (None, None).
+        A tuple containing the first and last timestamps where elevation > -0.833°
+        (accounting for refraction). If no sunlit period is found, returns (None, None).
     """
-    # Filter out nighttime (where elevation <= 0)
-    day_df = solar_positions[solar_positions["elevation"] > 0]
+    # Apply atmospheric refraction correction (-0.833° instead of 0°)
+    day_df = solar_positions[solar_positions["elevation"] > -0.833]
     if day_df.empty:
         return None, None
     first_ray = day_df.index[0]
