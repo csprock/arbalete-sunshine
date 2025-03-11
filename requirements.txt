@@ -6,3 +6,7 @@ rtree
 pyglet
 shapely
 mapbox-earcut
+pyassimp
+geopandas
+fiona
+lxml
