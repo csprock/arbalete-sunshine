@@ -1,0 +1,7 @@
+FROM csprock/dockerfiles:python-base-latest
+
+COPY requirements.txt /tmp/requirements.txt
+
+RUN apt install -y libgl1-mesa-dev mesa-common-dev libglu1-mesa-dev freeglut3-dev
+
+
