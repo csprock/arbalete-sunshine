@@ -252,6 +252,7 @@ def visualize_scene(
     floor: trimesh.Trimesh,
     sun_dir: np.ndarray | None = None,
     ray_length: float = 50.0,
+    viewer: str = "gl",
 ) -> None:
     """
     Create a scene with the floor, the extruded terrace, the building, a marker at the
@@ -283,7 +284,40 @@ def visualize_scene(
         ray_path.colors = np.tile([255, 255, 0, 255], (len(ray_path.entities), 1))
         scene.add_geometry(ray_path)
 
-    scene.show(lighting=False)
+    scene.show(lighting=False, viewer=viewer)
+
+
+def main(viewer: str = "gl") -> None:
+    today = datetime.now().strftime(DATE_FORMAT)
+    times = get_time_series(today, freq="30s")
+    solar_pos = get_solar_positions(times)
+
+    terrace_center = get_terrace_center(TERRACE_CORNERS)
+
+    # Create the building footprint in 2D and extrude it.
+    building = create_building_extrusion(
+        TERRACE_CORNERS, length=81.0, width=15.0, height=18.0
+    )
+
+    # Create the terrace from its 2D footprint and extrude it to 1 m.
+    terrace_mesh, terrace_poly = create_terrace_extrusion(TERRACE_CORNERS, height=1.0)
+
+    # Create the floor by enlarging the terrace bounding box and extruding to 0.1 m.
+    floor = create_floor(terrace_poly, margin=10.0, thickness=0.1)
+
+    last_sunray_time = get_shadow_adjusted_last_sunray_time(
+        times, solar_pos, terrace_center, building
+    )
+    print("Shadow-adjusted last sunlit time:", last_sunray_time)
+
+    sun_dir = None
+    if last_sunray_time is not None:
+        pos = solar_pos.loc[last_sunray_time]
+        sun_dir = sun_direction_vector(pos["azimuth"], pos["elevation"])
+
+    visualize_scene(
+        terrace_center, building, terrace_mesh, floor, sun_dir, ray_length=50.0, viewer=viewer
+    )
 
 
 if __name__ == "__main__":
@@ -295,7 +329,7 @@ if __name__ == "__main__":
 
     # Create the building footprint in 2D and extrude it.
     building = create_building_extrusion(
-        TERRACE_CORNERS, length=81.0, width=15.0, height=18.0
+        TERRACE_CORNERS, lengthvi=81.0, width=15.0, height=18.0
     )
 
     # Create the terrace from its 2D footprint and extrude it to 1 m.
