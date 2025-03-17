@@ -10,3 +10,6 @@ pyassimp
 geopandas
 fiona
 lxml
+ipykernel
+jupyterlab
+leaflet
