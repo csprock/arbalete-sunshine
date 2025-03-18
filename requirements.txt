@@ -2,6 +2,8 @@ pvlib
 pandas
 numpy
 pyproj
+triangle
+mapbox_earcut
 rtree
 pyglet
 shapely
@@ -13,3 +15,5 @@ lxml
 ipykernel
 jupyterlab
 leaflet
+folium
+cjio[export,reproject,validate]
