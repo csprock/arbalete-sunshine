@@ -3,7 +3,8 @@ Module for geometry-related calculations for the Arbalete Sunlight Analysis proj
 Provides functionality to compute and describe the terrace borders in meters.
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
+import numpy as np
 import pyproj
 
 from src.config import TERRACE_CORNERS
@@ -68,6 +69,36 @@ def describe_terrace(corners: Dict[str, Tuple[float, float]]) -> str:
         f"  West border:  {lengths['west']:.2f} m"
     )
     return description
+
+
+def shadow_bearing(azimuth: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+    return (azimuth + 180) % 360
+
+
+def shadow_length(solar_elevation: float, height: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+    return height / np.tan(np.radians(solar_elevation))
+
+
+def translate_point(lat, long, length, bearing) -> Union[Tuple[float, float], Tuple[np.ndarray, np.ndarray]]:
+
+    # convert to radians
+    lat = np.radians(lat)
+    long = np.radians(long)
+    bearing = np.radians(bearing)
+
+    # Earth radius in meters
+    R = 6371000
+
+    frac_distance = length / R
+
+    lat2 = np.arcsin(np.sin(lat) * np.cos(frac_distance) + np.cos(lat) * np.sin(frac_distance) * np.cos(bearing))
+    long2 = long + np.arctan2(np.sin(bearing) * np.sin(frac_distance) * np.cos(lat),
+                              np.cos(frac_distance) - np.sin(lat) * np.sin(lat2))
+    
+    return np.degrees(lat2), np.degrees(long2)
+
+
+
 
 
 if __name__ == "__main__":
