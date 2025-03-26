@@ -18,3 +18,5 @@ TERRACE_CORNERS: Final[dict[str, tuple[float, float]]] = {
     "SW": (46.202806, 6.151667),
     "SE": (46.202800, 6.151700),
 }
+SOURCE_EPSG = "EPSG:2056"
+TARGET_EPSG = "EPSG:4326"
