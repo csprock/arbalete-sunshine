@@ -2,7 +2,7 @@ import logging
 
 def get_logger(name: str, level: int = logging.DEBUG, is_root=False) -> logging.Logger:
 
-    fmt = "[%(levelnames)s] %(names)s - %(asctime)s - %(modules)s - %(funcNames)s - %(lineno)s - %(msg)s"
+    fmt = "[%(levelname)s] %(name)s - %(asctime)s - %(module)s - %(funcName)s - %(lineno)d - %(message)s"
     datefmt = "%Y-%m-%dT%H:%M:%S%z"
 
     logger = logging.getLogger(name)
