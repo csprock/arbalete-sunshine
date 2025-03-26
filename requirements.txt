@@ -16,4 +16,5 @@ ipykernel
 jupyterlab
 leaflet
 folium
+matplotlib
 cjio[export,reproject,validate]
