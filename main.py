@@ -10,6 +10,7 @@ from src.parse_city_json import process_multiple_buildings
 from src.parse_city_json import solar_position
 from src.parse_city_json import shadow_data_df
 from src.parse_city_json import translate_points_df
+from src.geometry import get_convex_hulls
 from src.solar import get_time_series
 
 
@@ -40,7 +41,6 @@ if __name__ == "__main__":
     buildings_filtered = {k: v for k, v in buildings.items() if v.attributes["EGID"] in sample_egid}
     LOGGER.info(f"Number of buildings after filtering: {len(buildings_filtered)}")
 
-    
 
     buildings_df = process_multiple_buildings(buildings_filtered)
 
@@ -65,6 +65,11 @@ if __name__ == "__main__":
 
 
     translated_points_df = translate_points_df(building_points_with_solar)
-
+    translated_points_df.to_csv("/app/data/translated_points.csv", index=False)
+    LOGGER.info("Data saved to /app/data/building_points_with_solar.csv and /app/data/translated_points.csv")
 
     
+
+    convex_hulls_df = get_convex_hulls(translated_points_df)
+    convex_hulls_df.to_csv("/app/data/convex_hulls.csv", index=False)
+    LOGGER.info("Data saved to /app/data/convex_hulls.csv")

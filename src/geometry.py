@@ -6,6 +6,10 @@ Provides functionality to compute and describe the terrace borders in meters.
 from typing import Dict, Tuple, Union
 import numpy as np
 import pyproj
+from scipy.spatial import ConvexHull
+import pandas as pd
+from shapely import intersection
+import shapely
 
 from src.config import TERRACE_CORNERS
 
@@ -98,6 +102,30 @@ def translate_point(lat, long, length, bearing) -> Union[Tuple[float, float], Tu
     return np.degrees(lat2), np.degrees(long2)
 
 
+def _get_convex_hull(sub_df: np.ndarray) -> np.ndarray:
+    hull = ConvexHull(sub_df)
+    return sub_df[hull.vertices]
+
+
+def get_convex_hulls(df: pd.DataFrame) -> pd.DataFrame:
+
+    convex_hulls_dfs = []
+    for idx, sub_df in df.groupby(['time', 'egid']):
+        hull = pd.DataFrame(_get_convex_hull(sub_df[['shadow_lat', 'shadow_lon']].values), columns=['shadow_lat', 'shadow_lon'])
+        hull['time'] = idx[0]
+        hull['egid'] = idx[1]
+        convex_hulls_dfs.append(hull)
+
+    return pd.concat(convex_hulls_dfs)
+
+
+def _get_intersection(shadow: np.ndarray, terrace: np.ndarray) -> Tuple[float, float]:
+    
+    terrace_polygon = shapely.Polygon(terrace)
+    shadow_polygon = shapely.Polygon(shadow)
+    intersection_result = terrace_polygon.intersection(shadow_polygon)
+
+    return intersection_result.convex_hull, intersection_result.area / terrace_polygon.area
 
 
 

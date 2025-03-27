@@ -7,7 +7,7 @@ from pyproj import Transformer
 import pvlib as pv
 from src import get_logger
 from src.config import SOURCE_EPSG, TARGET_EPSG
-from src.geometry import shadow_bearing, shadow_length, translate_point
+from src.geometry import shadow_bearing, shadow_length, translate_point, _get_intersection
 from src.solar import get_time_series
 
 transformer = Transformer.from_crs(SOURCE_EPSG, TARGET_EPSG)
@@ -159,13 +159,14 @@ def translate_points_df(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def get_interesection_ratios(shadow_df: pd.DataFrame, terrace_df: pd.DataFrame) -> pd.DataFrame:
 
+    results_tuple = []
 
-     
+    for idx, sub_df in shadow_df.groupby(['time', 'egid']):
+        shadow = sub_df[['shadow_lat', 'shadow_lon']].values
+        terrace = terrace_df[terrace_df['egid'] == idx[1]][['lat', 'lon']].values
+        results_tuple.append((idx[0], idx[1], _get_intersection(shadow, terrace)[1]))
 
-
-
-
-
-
-    
+    results_df = pd.DataFrame(results_tuple, columns=['time', 'egid', 'intersection_ratio'])
+    return results_df
