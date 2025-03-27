@@ -83,10 +83,17 @@ def process_single_building(co: cjio.models.CityObject) -> pd.DataFrame:
 
     return vertices_df
 
+def process_boundary_generator(generator: iter, transformer: Transformer):
+    return [x for x in transformer.itransform(generator)]
+    
 
-def convert_vertices_to_df(id: str, co: cjio.models.CityObject) -> pd.DataFrame:
+def convert_vertices_to_df(id: str, co: cjio.models.CityObject, transformer: Union[Transformer, None] = transformer) -> pd.DataFrame:
 
-    df = pd.DataFrame(co.get_vertices(), columns = ['lat', 'lon', 'z'])
+    vertex_list = co.get_vertices()
+    if transformer is not None:
+        vertex_list = process_boundary_generator(vertex_list, transformer)
+
+    df = pd.DataFrame(vertex_list, columns = ['lat', 'lon', 'z'])
     df['egid'] = id
 
     return df
@@ -123,7 +130,7 @@ def solar_position(df: pd.DataFrame, times: Union[pd.Timestamp, pd.DatetimeIndex
         egid = row['egid']
         h = row['h']
 
-        solar_position = pv.solarposition.get_solarposition(times, lat, lon, altitude=altitude)
+        solar_position = pv.solarposition.get_solarposition(times, lat, lon, altitude=altitude).reset_index(names="time")
 
         solar_position['egid'] = egid
         solar_position['lat'] = lat
@@ -134,7 +141,7 @@ def solar_position(df: pd.DataFrame, times: Union[pd.Timestamp, pd.DatetimeIndex
     
     df = pd.concat(dfs, ignore_index=True)
     
-    return df.loc[:, ['egid', 'lat', 'lon', 'elevation', 'azimuth','h']].copy()
+    return df.loc[:, ['time', 'egid', 'lat', 'lon', 'elevation', 'azimuth','h']].copy()
 
 
 def shadow_data_df(df: pd.DataFrame):
